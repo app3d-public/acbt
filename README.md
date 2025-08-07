@@ -28,3 +28,23 @@ Only one version of each logical file will be selected, based on available featu
 | OS      | `WIN32`        | win32       |
 | OS      | `LINUX`        | linux       |
 | OS      | `APPLE`        | osx         |
+
+## Usage
+
+### Source File Filtering
+```cmake
+add_files(${PROJECT_NAME} RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_sources(my_target PRIVATE ${SOURCE_FILES})
+```
+
+### Unit Test Generation
+```cmake
+set(TEST_LIBRARIES ${COMMON_LIBRARIES})
+set(TEST_ENV ${ENV_VARIABLES})
+set(TEST_SOURCES ${COMMON_SOURCES})
+
+add_test_files(LABEL A a.cpp)
+add_test_files(LABEL B b.cpp)
+add_test_files(LABEL N n.cpp)
+add_test_coverage(LABEL)
+```
