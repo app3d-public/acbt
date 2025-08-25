@@ -48,3 +48,9 @@ add_test_files(LABEL B b.cpp)
 add_test_files(LABEL N n.cpp)
 add_test_coverage(LABEL)
 ```
+
+## License
+This project is licensed under the [MIT License](LICENSE).
+
+## Contacts
+For any questions or feedback, you can reach out via [email](mailto:wusikijeronii@gmail.com) or open a new issue.

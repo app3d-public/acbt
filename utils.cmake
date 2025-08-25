@@ -163,7 +163,7 @@ function(add_files target_name)
     set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
 endfunction()
 
-set(TEMPLATES_DIR ${CMAKE_SOURCE_DIR}/cmake/templates)
+set(TEMPLATES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates)
 
 function(add_test_files TEST_LABEL TEST_NAME TEST_SOURCE_FILE)
     set(TEST_FINAL_NAME "${TEST_LABEL}_${TEST_NAME}")
