@@ -163,7 +163,7 @@ function(add_files target_name)
     set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
 endfunction()
 
-set(TEMPLATES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates)
+set(TEMPLATES_DIR ${CMAKE_CURRENT_LIST_DIR}/templates)
 
 function(add_test_files TEST_LABEL TEST_NAME TEST_SOURCE_FILE)
     set(TEST_FINAL_NAME "${TEST_LABEL}_${TEST_NAME}")
@@ -267,3 +267,4 @@ macro(project)
 endmacro()
 
 set(ACBT_LOADED TRUE PARENT_SCOPE)
+set(TEMPLATES_DIR ${TEMPLATES_DIR} PARENT_SCOPE)
