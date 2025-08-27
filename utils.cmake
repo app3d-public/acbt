@@ -268,5 +268,5 @@ else()
 endif()
 
 if(WIN32)
-    include(manifest.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/manifest.cmake)
 endif()
