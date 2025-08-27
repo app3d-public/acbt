@@ -42,7 +42,7 @@ endforeach()
 set(PREFIX_os "win32;WIN32" "linux;LINUX" "osx;APPLE")
 
 # Checks if a file exists and sets a variable to the result.
-function(isFileExists file_list target_file result_var)
+function(is_file_exists file_list target_file result_var)
     list(FIND file_list "${target_file}" index)
 
     if(index GREATER_EQUAL 0)
@@ -113,7 +113,7 @@ function(filter_files FILE_LIST OUT_LIST)
                     endif()
 
                     set(TO_FIND_NAME "${ABS_PATH}__${PREFIX}_${current_prefix}_${FILE_BASENAME}")
-                    isFileExists("${FILE_LIST}" ${TO_FIND_NAME} FILE_FOUND)
+                    is_file_exists("${FILE_LIST}" ${TO_FIND_NAME} FILE_FOUND)
 
                     if(FILE_FOUND)
                         list(APPEND PREFIX_${PREFIX}_FOUNDS "${ABS_PATH};${FILE_BASENAME}")
@@ -268,3 +268,5 @@ endmacro()
 
 set(ACBT_LOADED TRUE PARENT_SCOPE)
 set(TEMPLATES_DIR ${TEMPLATES_DIR} PARENT_SCOPE)
+set(PREFIX_os ${PREFIX_os} PARENT_SCOPE)
+set(PREFIX_simd ${PREFIX_simd} PARENT_SCOPE)

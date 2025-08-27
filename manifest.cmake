@@ -38,3 +38,6 @@ function(gen_app_config)
     file(RELATIVE_PATH LIBRARY_PATH "${TARGET_PATH}" "${APP_LIB_DIR}")
     configure_file(${TEMPLATES_DIR}/app.config.in ${OUT_PATH})
 endfunction()
+
+set(MANIFEST_LIB ${MANIFEST_LIB} PARENT_SCOPE)
+set(MANIFEST_APP ${MANIFEST_APP} PARENT_SCOPE)
