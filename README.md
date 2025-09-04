@@ -13,7 +13,7 @@ ACBT is a set of CMake scripts developed as part of the App3D project. It is use
 ## File Naming Convention
 To support feature- or platform-specific implementations, source files must follow the pattern:
 ```sh
-<prefix>_<feature>_<name>.cpp
+__<prefix>_<feature>_<name>.cpp
 ```
 Only one version of each logical file will be selected, based on available features.
 
