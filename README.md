@@ -13,7 +13,7 @@ ACBT is a set of CMake scripts developed as part of the App3D project. It is use
 ## File Naming Convention
 To support feature- or platform-specific implementations, source files must follow the pattern:
 ```sh
-__<prefix>_<feature>_<name>.cpp
+<prefix>_<feature>_<name>.cpp
 ```
 Only one version of each logical file will be selected, based on available features.
 
@@ -28,6 +28,17 @@ Only one version of each logical file will be selected, based on available featu
 | OS      | `WIN32`        | win32       |
 | OS      | `LINUX`        | linux       |
 | OS      | `APPLE`        | osx         |
+
+## Output Directories
+`APP_LIB_DIR` defines the common output directory for all shared libraries built in a project.  
+It is an important variable in ACBT because several features depend on it:
+
+- **Manifest and configuration generation (Microsoft Windows)**  
+  When generating assembly manifests or application configuration files the probing path is derived from `APP_LIB_DIR`. If this variable is set incorrectly, Windows may fail to locate required assemblies at runtime.
+- **Unit test execution**  
+  Test executables often use `APP_LIB_DIR` as their working directory so that all required libraries are immediately available without additional copying.
+- **Default behavior**  
+  If `APP_LIB_DIR` is not explicitly set, the default will be the build directory. This usually works for quick builds, but is not recommended for larger projects where predictable probing paths and manifests are required.
 
 ## Usage
 

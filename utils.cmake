@@ -132,12 +132,38 @@ function(filter_files FILE_LIST OUT_LIST)
     set(${OUT_LIST} ${${OUT_LIST}} PARENT_SCOPE)
 endfunction()
 
+# Normalizes a variable name
+# Example: My App-1 -> MY_APP_1
+function(normalize_variable_name INPUT OUT_VAR)
+    if(DEFINED ${INPUT})
+        set(_s "${${INPUT}}")
+    else()
+        set(_s "${INPUT}")
+    endif()
+
+    string(REGEX MATCHALL "([a-zA-Z0-9]+)" _tokens "${_s}")
+
+    set(_result "")
+
+    foreach(tok IN LISTS _tokens)
+        string(TOUPPER "${tok}" tok)
+
+        if(_result STREQUAL "")
+            set(_result "${tok}")
+        else()
+            set(_result "${_result}_${tok}")
+        endif()
+    endforeach()
+
+    set(${OUT_VAR} "${_result}" PARENT_SCOPE)
+endfunction()
+
 # Adds files to a given target
 function(add_files target_name)
     set(options RECURSE)
-    set(oneValueArgs)
-    set(multiValueArgs)
-    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    set(one_value_args)
+    set(multi_value_args)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "${options}" "${one_value_args}" "${multi_value_args}")
 
     set(APP_MODULES_LIST "")
 
@@ -160,7 +186,8 @@ function(add_files target_name)
         list(APPEND SOURCE_FILES ${FILTERED_FILES})
     endforeach()
 
-    set(SOURCE_FILES ${SOURCE_FILES} PARENT_SCOPE)
+    normalize_variable_name(target_name TARGET_NAME_VAR)
+    set(${TARGET_NAME_VAR}_SRC ${SOURCE_FILES} ${${TARGET_NAME_VAR}_SRC} PARENT_SCOPE)
 endfunction()
 
 set(TEMPLATES_DIR ${CMAKE_CURRENT_LIST_DIR}/templates)
@@ -178,7 +205,15 @@ function(add_test_files TEST_LABEL TEST_NAME TEST_SOURCE_FILE)
         target_include_directories(${TEST_FINAL_NAME} PRIVATE ${TEST_INCLUDES})
     endif()
 
-    add_test(NAME ${TEST_FINAL_NAME} COMMAND "${CMAKE_BINARY_DIR}/tests/${TEST_FINAL_NAME}" WORKING_DIRECTORY ${APP_LIB_DIR})
+    set(TEST_WORK_DIR)
+
+    if(DEFINED APP_LIB_DIR)
+        set(TEST_WORK_DIR ${APP_LIB_DIR})
+    else()
+        set(TEST_WORK_DIR ${CMAKE_BINARY_DIR})
+    endif()
+
+    add_test(NAME ${TEST_FINAL_NAME} COMMAND "${CMAKE_BINARY_DIR}/tests/${TEST_FINAL_NAME}" WORKING_DIRECTORY ${TEST_WORK_DIR})
 
     if(DEFINED TEST_LIBRARIES)
         target_link_libraries(${TEST_FINAL_NAME} PRIVATE ${TEST_LIBRARIES})
@@ -267,9 +302,11 @@ function(gen_version_file OUT_PATH)
             break()
         endif()
     endforeach()
-    if (NOT APP_VERSION_ARCH)
+
+    if(NOT APP_VERSION_ARCH)
         set(APP_VERSION_ARCH "BASELINE")
     endif()
+
     configure_file(${TEMPLATES_DIR}/version.h.in ${OUT_PATH})
 endfunction()
 
