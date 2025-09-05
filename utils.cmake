@@ -1,5 +1,9 @@
 include(CheckCXXSourceCompiles)
 
+if(NOT DEFINED ACBT_COMMON_H)
+    include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
+endif()
+
 # Check SIMD features
 function(check_compiler_define DEFINE RESULT)
     set(OLD_REQ_FLAGS "${CMAKE_REQUIRED_FLAGS}")
@@ -130,32 +134,6 @@ function(filter_files FILE_LIST OUT_LIST)
     endforeach()
 
     set(${OUT_LIST} ${${OUT_LIST}} PARENT_SCOPE)
-endfunction()
-
-# Normalizes a variable name
-# Example: My App-1 -> MY_APP_1
-function(normalize_variable_name INPUT OUT_VAR)
-    if(DEFINED ${INPUT})
-        set(_s "${${INPUT}}")
-    else()
-        set(_s "${INPUT}")
-    endif()
-
-    string(REGEX MATCHALL "([a-zA-Z0-9]+)" _tokens "${_s}")
-
-    set(_result "")
-
-    foreach(tok IN LISTS _tokens)
-        string(TOUPPER "${tok}" tok)
-
-        if(_result STREQUAL "")
-            set(_result "${tok}")
-        else()
-            set(_result "${_result}_${tok}")
-        endif()
-    endforeach()
-
-    set(${OUT_VAR} "${_result}" PARENT_SCOPE)
 endfunction()
 
 # Adds files to a given target
