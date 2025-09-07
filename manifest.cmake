@@ -6,34 +6,55 @@ function(gen_manifest_dependencies DEPENDENCY_LIST OUT_VAR)
     set(DEPENDENCY_BLOCK "")
 
     foreach(DEP_PAIR IN LISTS DEPENDENCY_LIST)
-        string(REGEX MATCH "([^:]+):([0-9]+\\.[0-9]+\\.[0-9]+)" MATCHES ${DEP_PAIR})
-        set(DEP_NAME ${CMAKE_MATCH_1})
-        set(DEP_VERSION ${CMAKE_MATCH_2})
+        string(REGEX MATCH "([^:]+):([0-9]+\\.[0-9]+\\.[0-9]+)(\\.[0-9]+)?" MATCHES "${DEP_PAIR}")
+        set(DEP_NAME "${CMAKE_MATCH_1}")
+        set(DEP_VERSION "${CMAKE_MATCH_2}${CMAKE_MATCH_3}")
 
-        string(APPEND DEPENDENCY_BLOCK "    <dependency>\n")
-        string(APPEND DEPENDENCY_BLOCK "        <dependentAssembly>\n")
-        string(APPEND DEPENDENCY_BLOCK "            <assemblyIdentity type=\"win32\" name=\"${DEP_NAME}\" version=\"${DEP_VERSION}.0\" />\n")
-        string(APPEND DEPENDENCY_BLOCK "        </dependentAssembly>\n")
-        string(APPEND DEPENDENCY_BLOCK "    </dependency>\n")
+        if("${CMAKE_MATCH_3}" STREQUAL "")
+            set(DEP_VERSION "${DEP_VERSION}.0")
+        endif()
+
+        string(APPEND DEPENDENCY_BLOCK
+            "    <dependency>\n"
+            "        <dependentAssembly>\n"
+            "            <assemblyIdentity type=\"win32\" name=\"${DEP_NAME}\" version=\"${DEP_VERSION}\" />\n"
+            "        </dependentAssembly>\n"
+            "    </dependency>\n")
     endforeach()
 
     set(${OUT_VAR} "${DEPENDENCY_BLOCK}" PARENT_SCOPE)
 endfunction()
 
 function(gen_manifest_lib PACKAGE_NAME PACKAGE_VERSION)
-    set(PACKAGE_OUT)
-
-    if(DEFINED APP_LIB_DIR)
-        set(OUT_PATH ${APP_LIB_DIR}/${PACKAGE_NAME}.manifest)
-    else()
-        if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-            set(OUT_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PACKAGE_NAME}.manifest)
-        else()
-            set(OUT_PATH ${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.manifest)
-        endif()
+    # Нормализуем версию до 4-частной: x.y.z  -> x.y.z.0,  x.y.z.w -> как есть
+    if(NOT PACKAGE_VERSION)
+        message(FATAL_ERROR "gen_manifest_lib(${PACKAGE_NAME}): PACKAGE_VERSION is empty")
     endif()
 
-    configure_file(${MANIFEST_LIB} ${OUT_PATH})
+    string(REGEX MATCH "^([0-9]+\\.[0-9]+\\.[0-9]+)(\\.[0-9]+)?$" _ "${PACKAGE_VERSION}")
+    if(NOT CMAKE_MATCH_0)
+        message(FATAL_ERROR
+            "gen_manifest_lib(${PACKAGE_NAME}): invalid version '${PACKAGE_VERSION}'. "
+            "Expected 'x.y.z' or 'x.y.z.w'")
+    endif()
+
+    set(_PKG_VERSION "${CMAKE_MATCH_1}${CMAKE_MATCH_2}")
+    if("${CMAKE_MATCH_2}" STREQUAL "")
+        set(_PKG_VERSION "${_PKG_VERSION}.0")
+    endif()
+
+    if(DEFINED APP_LIB_DIR)
+        set(OUT_PATH "${APP_LIB_DIR}/${PACKAGE_NAME}.manifest")
+    elseif(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+        set(OUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PACKAGE_NAME}.manifest")
+    else()
+        set(OUT_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.manifest")
+    endif()
+
+    set(PACKAGE_NAME    "${PACKAGE_NAME}")
+    set(PACKAGE_VERSION "${_PKG_VERSION}")
+
+    configure_file("${MANIFEST_LIB}" "${OUT_PATH}" @ONLY)
 endfunction()
 
 function(gen_manifest_app PACKAGE_NAME PACKAGE_VERSION)
