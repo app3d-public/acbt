@@ -216,8 +216,6 @@ function(add_test_files TEST_LABEL TEST_NAME TEST_SOURCE_FILE)
 
     set_target_properties(${TEST_FINAL_NAME}
         PROPERTIES
-        CXX_STANDARD 23
-        CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS YES
     )
 
@@ -265,8 +263,6 @@ function(add_test_coverage TEST_LABEL)
 
     set_target_properties(${TEST_LABEL}_all
         PROPERTIES
-        CXX_STANDARD 23
-        CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS YES
     )
 endfunction()
