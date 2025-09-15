@@ -26,7 +26,6 @@ function(gen_manifest_dependencies DEPENDENCY_LIST OUT_VAR)
 endfunction()
 
 function(gen_manifest_lib PACKAGE_NAME PACKAGE_VERSION)
-    # Нормализуем версию до 4-частной: x.y.z  -> x.y.z.0,  x.y.z.w -> как есть
     if(NOT PACKAGE_VERSION)
         message(FATAL_ERROR "gen_manifest_lib(${PACKAGE_NAME}): PACKAGE_VERSION is empty")
     endif()
