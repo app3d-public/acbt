@@ -4,7 +4,7 @@ if(NOT DEFINED ACBT_COMMON_H)
     include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 endif()
 
-# Check SIMD features
+# Check ISA features
 function(check_compiler_define DEFINE RESULT)
     set(OLD_REQ_FLAGS "${CMAKE_REQUIRED_FLAGS}")
     set(CMAKE_REQUIRED_FLAGS "-march=native")
@@ -20,25 +20,25 @@ function(check_compiler_define DEFINE RESULT)
     set(${RESULT} ${${RESULT}} PARENT_SCOPE)
 endfunction()
 
-check_compiler_define("__AVX__" SIMD_AVX)
-check_compiler_define("__AVX2__" SIMD_AVX2)
-check_compiler_define("__AVX512F__" SIMD_AVX512)
-check_compiler_define("__SSE4_2__" SIMD_SSE42)
+check_compiler_define("__AVX__" ISA_AVX)
+check_compiler_define("__AVX2__" ISA_AVX2)
+check_compiler_define("__AVX512F__" ISA_AVX512)
+check_compiler_define("__SSE4_2__" ISA_SSE42)
 
-set(SIMD_DEFAULT TRUE)
-set(PREFIX_simd "avx512;SIMD_AVX512" "avx2;SIMD_AVX2" "avx;SIMD_AVX" "sse42;SIMD_SSE42" "nosimd;SIMD_DEFAULT")
-list(LENGTH PREFIX_simd list_length)
+set(ISA_DEFAULT TRUE)
+set(PREFIX_isa "avx512;ISA_AVX512" "avx2;ISA_AVX2" "avx;ISA_AVX" "sse42;ISA_SSE42" "scalar;ISA_DEFAULT")
+list(LENGTH PREFIX_isa list_length)
 math(EXPR max_index "${list_length} - 1")
 
 foreach(idx RANGE 0 ${max_index} 2)
     math(EXPR next_idx "${idx} + 1")
-    list(GET PREFIX_simd ${idx} item1)
-    list(GET PREFIX_simd ${next_idx} item2)
+    list(GET PREFIX_isa ${idx} item1)
+    list(GET PREFIX_isa ${next_idx} item2)
 
     if(NOT ${item2})
         continue()
     else()
-        set(APP_SIMD_ARCH ${item1})
+        set(APP_ISA_ARCH ${item1})
         break()
     endif()
 endforeach()
@@ -271,7 +271,7 @@ function(gen_version_file OUT_PATH)
     string(TOUPPER "${PROJECT_NAME}" APP_VERSION_NAME)
 
     foreach(arch AVX512 AVX2 AVX SSE42)
-        if(SIMD_${arch})
+        if(ISA_${arch})
             set(APP_VERSION_ARCH ${arch})
             break()
         endif()
@@ -284,12 +284,87 @@ function(gen_version_file OUT_PATH)
     configure_file(${TEMPLATES_DIR}/version.h.in ${OUT_PATH})
 endfunction()
 
+# Compile options functions
+
+# Apply compile options for a list of targets
+function(apply_compile_options)
+    set(targets "")
+    set(options "")
+
+    set(mode "targets")
+
+    foreach(arg IN LISTS ARGN)
+        if(arg STREQUAL "OPTIONS")
+            set(mode "options")
+            continue()
+        endif()
+
+        if(mode STREQUAL "targets")
+            list(APPEND targets ${arg})
+        else()
+            list(APPEND options ${arg})
+        endif()
+    endforeach()
+
+    if(NOT targets)
+        message(FATAL_ERROR "apply_compile_options(): no targets specified")
+    endif()
+
+    if(NOT options)
+        message(FATAL_ERROR "apply_compile_options(): no OPTIONS specified")
+    endif()
+
+    foreach(tgt IN LISTS targets)
+        if(NOT TARGET ${tgt})
+            message(FATAL_ERROR "apply_compile_options(): target '${tgt}' does not exist")
+        endif()
+
+        target_compile_options(${tgt} PRIVATE ${options})
+    endforeach()
+endfunction()
+
+include(CheckCXXCompilerFlag)
+
+# Enable LTO
+function(enable_lto)
+    check_cxx_compiler_flag("-flto" HAS_LTO)
+
+    if(HAS_LTO)
+        add_compile_options("-flto")
+    else()
+        message(WARNING "LTO is not supported by the compiler")
+    endif()
+endfunction()
+
+# Enable strip
+function(enable_strip)
+    check_cxx_compiler_flag("-s" HAS_STRIP)
+
+    if(HAS_STRIP)
+        add_compile_options("-s")
+    else()
+        message(WARNING "strip is not supported by the compiler")
+    endif()
+endfunction()
+
+# Enable coverage
+function(enable_coverage)
+    add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+    add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+endfunction()
+
+# Enable ASAN
+function(enable_asan)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+endfunction()
+
 set(ACBT_LOADED TRUE)
+
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(ACBT_LOADED TRUE PARENT_SCOPE)
     set(TEMPLATES_DIR ${TEMPLATES_DIR} PARENT_SCOPE)
     set(PREFIX_os ${PREFIX_os} PARENT_SCOPE)
-    set(PREFIX_simd ${PREFIX_simd} PARENT_SCOPE)
+    set(PREFIX_isa ${PREFIX_isa} PARENT_SCOPE)
 endif()
 
 if(WIN32)
