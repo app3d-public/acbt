@@ -341,7 +341,7 @@ function(enable_strip)
     check_cxx_compiler_flag("-s" HAS_STRIP)
 
     if(HAS_STRIP)
-        add_compile_options("-s")
+        add_link_options("-s")
     else()
         message(WARNING "strip is not supported by the compiler")
     endif()
@@ -356,6 +356,13 @@ endfunction()
 # Enable ASAN
 function(enable_asan)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+endfunction()
+
+function(configure_clang_toolchain)
+    add_compile_options(-stdlib=libc++)
+    add_link_options(-stdlib=libc++)
+    add_compile_definitions(_LIBCPP_NO_VCRUNTIME)
+    add_compile_options(-Wno-vla-extension)
 endfunction()
 
 set(ACBT_LOADED TRUE)
