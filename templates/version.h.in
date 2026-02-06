@@ -10,7 +10,6 @@
 
 #ifndef VERSION_CONFIG_G
 #define VERSION_CONFIG_G
-#define APP_CPU_PROFILE  "@APP_VERSION_ARCH@"
 #define APP_OS_NAME      "@CMAKE_SYSTEM_NAME@"
 #endif
 // clang-format on

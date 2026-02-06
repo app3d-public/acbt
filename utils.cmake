@@ -269,18 +269,6 @@ endfunction()
 
 function(gen_version_file OUT_PATH)
     string(TOUPPER "${PROJECT_NAME}" APP_VERSION_NAME)
-
-    foreach(arch AVX512 AVX2 AVX SSE42)
-        if(ISA_${arch})
-            set(APP_VERSION_ARCH ${arch})
-            break()
-        endif()
-    endforeach()
-
-    if(NOT APP_VERSION_ARCH)
-        set(APP_VERSION_ARCH "BASELINE")
-    endif()
-
     configure_file(${TEMPLATES_DIR}/version.h.in ${OUT_PATH})
 endfunction()
 
