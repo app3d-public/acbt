@@ -344,6 +344,7 @@ endfunction()
 # Enable ASAN
 function(enable_asan)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
 endfunction()
 
 function(configure_clang_toolchain)
