@@ -80,20 +80,34 @@ function(acbt_nuget_install_package)
 
     acbt_find_nuget_exe(nuget_exe)
 
+    string(TOLOWER "${ARG_PACKAGE_NAME}" package_name_lower)
+    if(DEFINED ENV{NUGET_PACKAGES} AND NOT "$ENV{NUGET_PACKAGES}" STREQUAL "")
+        set(global_packages_root "$ENV{NUGET_PACKAGES}")
+    else()
+        set(global_packages_root "$ENV{USERPROFILE}/.nuget/packages")
+    endif()
+
     set(package_root "${ARG_OUTPUT_DIRECTORY}/${ARG_PACKAGE_NAME}.${ARG_PACKAGE_VERSION}")
+    set(global_package_root "${global_packages_root}/${package_name_lower}/${ARG_PACKAGE_VERSION}")
     file(MAKE_DIRECTORY "${ARG_OUTPUT_DIRECTORY}")
 
     if(NOT EXISTS "${package_root}")
-        message(STATUS "Installing ${ARG_PACKAGE_NAME} ${ARG_PACKAGE_VERSION} into ${ARG_OUTPUT_DIRECTORY}")
-        execute_process(
-            COMMAND "${nuget_exe}" install "${ARG_PACKAGE_NAME}"
-                -Version "${ARG_PACKAGE_VERSION}"
-                -OutputDirectory "${ARG_OUTPUT_DIRECTORY}"
-                -DependencyVersion "${ARG_DEPENDENCY_VERSION}"
-                -NonInteractive
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-            COMMAND_ERROR_IS_FATAL ANY
-        )
+        if(EXISTS "${global_package_root}")
+            message(STATUS "Copying cached ${ARG_PACKAGE_NAME} ${ARG_PACKAGE_VERSION} into ${ARG_OUTPUT_DIRECTORY}")
+            file(COPY "${global_package_root}" DESTINATION "${ARG_OUTPUT_DIRECTORY}")
+        else()
+            message(STATUS "Installing ${ARG_PACKAGE_NAME} ${ARG_PACKAGE_VERSION} into ${ARG_OUTPUT_DIRECTORY}")
+            execute_process(
+                COMMAND "${nuget_exe}" install "${ARG_PACKAGE_NAME}"
+                    -Version "${ARG_PACKAGE_VERSION}"
+                    -OutputDirectory "${ARG_OUTPUT_DIRECTORY}"
+                    -DependencyVersion "${ARG_DEPENDENCY_VERSION}"
+                    -Source "https://api.nuget.org/v3/index.json"
+                    -NonInteractive
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+                COMMAND_ERROR_IS_FATAL ANY
+            )
+        endif()
     endif()
 endfunction()
 
