@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-    <assemblyIdentity type="win32" name="@PACKAGE_NAME@" version="@PACKAGE_VERSION@" />
-    <file name="@PACKAGE_NAME@.dll" />
+    <assemblyIdentity type="win32" name="@PACKAGE_ASSEMBLY_NAME@" version="@PACKAGE_VERSION@" />
+    @PACKAGE_DEPENDENCIES@
+    <file name="@PACKAGE_FILE_NAME@" />
 </assembly>

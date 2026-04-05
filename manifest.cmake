@@ -1,16 +1,29 @@
 set(MANIFEST_LIB ${TEMPLATES_DIR}/lib.manifest.in)
 set(MANIFEST_APP ${TEMPLATES_DIR}/app.manifest.in)
 
+function(_manifest_normalize_windows_module_name INPUT_NAME OUT_NAME)
+    if("${INPUT_NAME}" MATCHES "\\.(dll|exe)$")
+        set(_NAME "${INPUT_NAME}")
+    else()
+        set(_NAME "${INPUT_NAME}.dll")
+    endif()
+
+    set(${OUT_NAME} "${_NAME}" PARENT_SCOPE)
+endfunction()
+
 # Generate dependencies for Windows Manifest files
 function(gen_manifest_dependencies DEPENDENCY_LIST OUT_VAR)
     set(DEPENDENCY_BLOCK "")
 
     foreach(DEP_PAIR IN LISTS DEPENDENCY_LIST)
-        string(REGEX MATCH "([^:]+):([0-9]+\\.[0-9]+\\.[0-9]+)(\\.[0-9]+)?" MATCHES "${DEP_PAIR}")
+        string(REGEX MATCH "([^:]+):([0-9]+\\.[0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?" MATCHES "${DEP_PAIR}")
         set(DEP_NAME "${CMAKE_MATCH_1}")
-        set(DEP_VERSION "${CMAKE_MATCH_2}${CMAKE_MATCH_3}")
+        set(DEP_VERSION "${CMAKE_MATCH_2}${CMAKE_MATCH_3}${CMAKE_MATCH_4}")
+        _manifest_normalize_windows_module_name("${DEP_NAME}" DEP_NAME)
 
         if("${CMAKE_MATCH_3}" STREQUAL "")
+            set(DEP_VERSION "${DEP_VERSION}.0.0")
+        elseif("${CMAKE_MATCH_4}" STREQUAL "")
             set(DEP_VERSION "${DEP_VERSION}.0")
         endif()
 
@@ -30,28 +43,34 @@ function(gen_manifest_lib PACKAGE_NAME PACKAGE_VERSION)
         message(FATAL_ERROR "gen_manifest_lib(${PACKAGE_NAME}): PACKAGE_VERSION is empty")
     endif()
 
-    string(REGEX MATCH "^([0-9]+\\.[0-9]+\\.[0-9]+)(\\.[0-9]+)?$" _ "${PACKAGE_VERSION}")
+    string(REGEX MATCH "^([0-9]+\\.[0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?$" _ "${PACKAGE_VERSION}")
     if(NOT CMAKE_MATCH_0)
         message(FATAL_ERROR
             "gen_manifest_lib(${PACKAGE_NAME}): invalid version '${PACKAGE_VERSION}'. "
-            "Expected 'x.y.z' or 'x.y.z.w'")
+            "Expected 'x.y', 'x.y.z' or 'x.y.z.w'")
     endif()
 
-    set(_PKG_VERSION "${CMAKE_MATCH_1}${CMAKE_MATCH_2}")
+    set(_PKG_VERSION "${CMAKE_MATCH_1}${CMAKE_MATCH_2}${CMAKE_MATCH_3}")
     if("${CMAKE_MATCH_2}" STREQUAL "")
+        set(_PKG_VERSION "${_PKG_VERSION}.0.0")
+    elseif("${CMAKE_MATCH_3}" STREQUAL "")
         set(_PKG_VERSION "${_PKG_VERSION}.0")
     endif()
 
+    _manifest_normalize_windows_module_name("${PACKAGE_NAME}" PACKAGE_ASSEMBLY_NAME)
+    set(PACKAGE_FILE_NAME "${PACKAGE_ASSEMBLY_NAME}")
+
     if(DEFINED APP_LIB_DIR)
-        set(OUT_PATH "${APP_LIB_DIR}/${PACKAGE_NAME}.manifest")
+        set(OUT_PATH "${APP_LIB_DIR}/${PACKAGE_FILE_NAME}.manifest")
     elseif(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-        set(OUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PACKAGE_NAME}.manifest")
+        set(OUT_PATH "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PACKAGE_FILE_NAME}.manifest")
     else()
-        set(OUT_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_NAME}.manifest")
+        set(OUT_PATH "${CMAKE_BINARY_DIR}/${PACKAGE_FILE_NAME}.manifest")
     endif()
 
     set(PACKAGE_NAME    "${PACKAGE_NAME}")
     set(PACKAGE_VERSION "${_PKG_VERSION}")
+    gen_manifest_dependencies("${ARGN}" PACKAGE_DEPENDENCIES)
 
     configure_file("${MANIFEST_LIB}" "${OUT_PATH}" @ONLY)
 endfunction()
