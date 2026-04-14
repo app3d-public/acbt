@@ -6,7 +6,7 @@ if(NOT DEFINED ACBT_COMMON_H)
     include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 endif()
 
-function(acbt_get_target_output_dir target_name out_var)
+function(get_target_output_dir target_name out_var)
     get_target_property(target_output_dir ${target_name} RUNTIME_OUTPUT_DIRECTORY)
 
     if(NOT target_output_dir OR target_output_dir STREQUAL "target_output_dir-NOTFOUND")
@@ -21,7 +21,7 @@ function(acbt_get_target_output_dir target_name out_var)
     set(${out_var} "${target_output_dir}" PARENT_SCOPE)
 endfunction()
 
-function(acbt_find_nuget_exe out_var)
+function(find_nuget_exe out_var)
     find_program(nuget_exe NAMES nuget nuget.exe
         HINTS "${CMAKE_SOURCE_DIR}" "$ENV{NUGET_EXE}")
     if(NOT nuget_exe)
@@ -30,7 +30,7 @@ function(acbt_find_nuget_exe out_var)
     set(${out_var} "${nuget_exe}" PARENT_SCOPE)
 endfunction()
 
-function(acbt_find_cppwinrt_exe out_var)
+function(find_cppwinrt_exe out_var)
     find_program(cppwinrt_exe NAMES cppwinrt cppwinrt.exe)
     if(NOT cppwinrt_exe)
         message(FATAL_ERROR "cppwinrt.exe was not found. Install C++/WinRT tooling or add it to PATH.")
@@ -38,13 +38,13 @@ function(acbt_find_cppwinrt_exe out_var)
     set(${out_var} "${cppwinrt_exe}" PARENT_SCOPE)
 endfunction()
 
-function(acbt_get_windows_dll_file_version dll_path out_var)
+function(get_windows_dll_file_version dll_path out_var)
     if(NOT WIN32)
-        message(FATAL_ERROR "acbt_get_windows_dll_file_version() is supported only on Windows")
+        message(FATAL_ERROR "get_windows_dll_file_version() is supported only on Windows")
     endif()
 
     if(NOT EXISTS "${dll_path}")
-        message(FATAL_ERROR "acbt_get_windows_dll_file_version(): file does not exist: ${dll_path}")
+        message(FATAL_ERROR "get_windows_dll_file_version(): file does not exist: ${dll_path}")
     endif()
 
     find_program(ACBT_POWERSHELL_EXE NAMES powershell powershell.exe REQUIRED)
@@ -58,27 +58,27 @@ function(acbt_get_windows_dll_file_version dll_path out_var)
 
     if(NOT dll_file_version)
         message(FATAL_ERROR
-            "acbt_get_windows_dll_file_version(): failed to read FileVersion from ${dll_path}")
+            "get_windows_dll_file_version(): failed to read FileVersion from ${dll_path}")
     endif()
 
     set(${out_var} "${dll_file_version}" PARENT_SCOPE)
 endfunction()
 
-function(acbt_nuget_install_package)
+function(nuget_install_package)
     set(options)
     set(one_value_args PACKAGE_NAME PACKAGE_VERSION OUTPUT_DIRECTORY DEPENDENCY_VERSION)
     cmake_parse_arguments(ARG "${options}" "${one_value_args}" "" ${ARGN})
 
     if(NOT ARG_PACKAGE_NAME OR NOT ARG_PACKAGE_VERSION OR NOT ARG_OUTPUT_DIRECTORY)
         message(FATAL_ERROR
-            "acbt_nuget_install_package() requires PACKAGE_NAME, PACKAGE_VERSION and OUTPUT_DIRECTORY")
+            "nuget_install_package() requires PACKAGE_NAME, PACKAGE_VERSION and OUTPUT_DIRECTORY")
     endif()
 
     if(NOT ARG_DEPENDENCY_VERSION)
         set(ARG_DEPENDENCY_VERSION "HighestPatch")
     endif()
 
-    acbt_find_nuget_exe(nuget_exe)
+    find_nuget_exe(nuget_exe)
 
     string(TOLOWER "${ARG_PACKAGE_NAME}" package_name_lower)
     if(DEFINED ENV{NUGET_PACKAGES} AND NOT "$ENV{NUGET_PACKAGES}" STREQUAL "")
@@ -112,7 +112,7 @@ function(acbt_nuget_install_package)
     endif()
 endfunction()
 
-function(acbt_add_cppwinrt_target)
+function(add_cppwinrt_target)
     set(options)
     set(one_value_args TARGET_NAME OUTPUT_DIR INPUT_WINMD)
     set(multi_value_args REF_WINMDS DEPENDS)
@@ -120,10 +120,10 @@ function(acbt_add_cppwinrt_target)
 
     if(NOT ARG_TARGET_NAME OR NOT ARG_OUTPUT_DIR OR NOT ARG_INPUT_WINMD)
         message(FATAL_ERROR
-            "acbt_add_cppwinrt_target() requires TARGET_NAME, OUTPUT_DIR and INPUT_WINMD")
+            "add_cppwinrt_target() requires TARGET_NAME, OUTPUT_DIR and INPUT_WINMD")
     endif()
 
-    acbt_find_cppwinrt_exe(cppwinrt_exe)
+    find_cppwinrt_exe(cppwinrt_exe)
 
     set(cppwinrt_stamp "${ARG_OUTPUT_DIR}/.stamp")
     set(cppwinrt_args -out "${ARG_OUTPUT_DIR}" -ref sdk)
