@@ -1,0 +1,13 @@
+#pragma once
+
+// cmake-format off
+#if defined(_WIN32)
+    #if defined(@PROJECT_VERSION_NAME@_BUILD)
+        #define @PROJECT_VERSION_NAME@_EXPORT __declspec(dllexport)
+    #else
+        #define @PROJECT_VERSION_NAME@_EXPORT __declspec(dllimport)
+    #endif
+#else
+    #define @PROJECT_VERSION_NAME@_EXPORT __attribute__((visibility("default")))
+#endif // _WIN32
+       // cmake-format on

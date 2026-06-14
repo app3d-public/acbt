@@ -1,0 +1,21 @@
+#pragma once
+
+// clang-format off
+#define @PROJECT_VERSION_NAME@_LIKELY(x)   __builtin_expect(!!(x), 1)
+#define @PROJECT_VERSION_NAME@_UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define @PROJECT_VERSION_NAME@_HOT         __attribute__((hot))
+#define @PROJECT_VERSION_NAME@_COLD        __attribute__((cold))
+#define @PROJECT_VERSION_NAME@_FORCEINLINE __attribute__((always_inline)) inline
+
+#if defined(__cpp_consteval) && __cpp_consteval >= 201811
+    #define @PROJECT_VERSION_NAME@_CONSTEVAL consteval
+#else
+    #define @PROJECT_VERSION_NAME@_CONSTEVAL constexpr
+#endif
+
+#if defined(__cpp_constinit) && __cpp_constinit >= 201907
+    #define @PROJECT_VERSION_NAME@_CONSTINIT constinit
+#else
+    #define @PROJECT_VERSION_NAME@_CONSTINIT constexpr
+#endif
+// clang-format on
