@@ -16,7 +16,11 @@ function(gen_manifest_dependencies DEPENDENCY_LIST OUT_VAR)
     set(DEPENDENCY_BLOCK "")
 
     foreach(DEP_PAIR IN LISTS DEPENDENCY_LIST)
-        string(REGEX MATCH "([^:]+):([0-9]+\\.[0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?" MATCHES "${DEP_PAIR}")
+        string(REGEX MATCH "^([^:]+):([0-9]+\\.[0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?$" MATCHES "${DEP_PAIR}")
+        if(NOT CMAKE_MATCH_0)
+            message(FATAL_ERROR
+                "Invalid manifest dependency '${DEP_PAIR}'. Expected 'name:x.y', 'name:x.y.z' or 'name:x.y.z.w'")
+        endif()
         set(DEP_NAME "${CMAKE_MATCH_1}")
         set(DEP_VERSION "${CMAKE_MATCH_2}${CMAKE_MATCH_3}${CMAKE_MATCH_4}")
         _manifest_normalize_windows_module_name("${DEP_NAME}" DEP_NAME)
