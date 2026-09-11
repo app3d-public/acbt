@@ -7,7 +7,11 @@
     #else
         #define @PROJECT_VERSION_NAME@_EXPORT __declspec(dllimport)
     #endif
+    #define @PROJECT_VERSION_NAME@_CLASS_EXPORT
+    #define @PROJECT_VERSION_NAME@_NO_EXPORT
 #else
     #define @PROJECT_VERSION_NAME@_EXPORT __attribute__((visibility("default")))
+    #define @PROJECT_VERSION_NAME@_CLASS_EXPORT @PROJECT_VERSION_NAME@_EXPORT
+    #define @PROJECT_VERSION_NAME@_NO_EXPORT __attribute__((visibility("hidden")))
 #endif // _WIN32
-       // cmake-format on
+// cmake-format on
