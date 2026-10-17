@@ -38,29 +38,32 @@ function(find_cppwinrt_exe out_var)
     set(${out_var} "${cppwinrt_exe}" PARENT_SCOPE)
 endfunction()
 
+# OPTIONAL returns an empty value for DLLs without a numeric FileVersion resource.
 function(get_windows_dll_file_version dll_path out_var)
+    cmake_parse_arguments(ARG "OPTIONAL" "" "" ${ARGN})
     if(NOT WIN32)
         message(FATAL_ERROR "get_windows_dll_file_version() is supported only on Windows")
     endif()
-
     if(NOT EXISTS "${dll_path}")
         message(FATAL_ERROR "get_windows_dll_file_version(): file does not exist: ${dll_path}")
     endif()
 
     find_program(ACBT_POWERSHELL_EXE NAMES powershell powershell.exe REQUIRED)
+    string(REPLACE "'" "''" escaped_path "${dll_path}")
     execute_process(
-        COMMAND "${ACBT_POWERSHELL_EXE}" -NoProfile -ExecutionPolicy Bypass
-            "(Get-Item '${dll_path}').VersionInfo.FileVersion"
+        COMMAND "${ACBT_POWERSHELL_EXE}" -NoProfile -ExecutionPolicy Bypass -Command
+            "(Get-Item -LiteralPath '${escaped_path}').VersionInfo.FileVersion"
+        RESULT_VARIABLE result
         OUTPUT_VARIABLE dll_file_version
         OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-
-    if(NOT dll_file_version)
-        message(FATAL_ERROR
-            "get_windows_dll_file_version(): failed to read FileVersion from ${dll_path}")
+        ERROR_QUIET)
+    if(NOT result EQUAL 0 OR NOT dll_file_version MATCHES "^[0-9]+\\.[0-9]+(\\.[0-9]+)?(\\.[0-9]+)?$")
+        if(NOT ARG_OPTIONAL)
+            message(FATAL_ERROR
+                "get_windows_dll_file_version(): failed to read numeric FileVersion from ${dll_path}")
+        endif()
+        set(dll_file_version "")
     endif()
-
     set(${out_var} "${dll_file_version}" PARENT_SCOPE)
 endfunction()
 

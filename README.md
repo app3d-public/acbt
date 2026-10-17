@@ -48,6 +48,50 @@ add_files(${PROJECT_NAME} RECURSE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_sources(my_target PRIVATE ${SOURCE_FILES})
 ```
 
+### Application Manifests
+
+`gen_manifest_app(target version dependencies...)` uses the target's runtime output directory.
+An explicit `OUTPUT_DIRECTORY` also allows generation from a `cmake -P` script without defining a project or target:
+
+```cmake
+set(MANIFEST_PROCESSOR_ARCHITECTURE amd64)
+gen_manifest_app(my_app 1.2.3 OUTPUT_DIRECTORY "C:/package" libexample:1.0)
+```
+
+The manifest identity uses the supplied package name and version. Other application metadata is read from `PROJECT_DESCRIPTION` and `APP_NAME` when provided.
+
+### Runtime DLL Manifests (Windows)
+
+`runtime.cmake` provides `gen_runtime_manifests()` for use after linking, including from `cmake -P`:
+
+```cmake
+set(TEMPLATES_DIR "${ACBT_DIR}/templates")
+set(MANIFEST_PROCESSOR_ARCHITECTURE amd64)
+include("${ACBT_DIR}/runtime.cmake")
+gen_runtime_manifests(
+    EXECUTABLE "C:/package/my_app.exe"
+    NAME my_app VERSION 1.2.3
+    OUTPUT_DIRECTORY "C:/package"
+    LIBRARY_DIRECTORY "C:/package/lib/Windows"
+    DIRECTORIES "C:/toolchain/bin"
+    LOCAL_LIBRARIES libmy_library.dll
+    VERSIONS "libmy_library.dll:1.2.3")
+```
+
+The function recursively reads PE import tables using `llvm-objdump` or `objdump`
+(`OBJDUMP` can specify its path), excludes Windows system imports, and calls
+`gen_manifest_lib()` and `gen_manifest_app()` with each binary's direct dependencies.
+Missing non-system imports stop generation. No DLLs are loaded or copied.
+
+`LOCAL_LIBRARIES` selects binaries from `LIBRARY_DIRECTORY` before `DIRECTORIES`;
+other binaries are searched in the reverse order. Versions explicitly supplied in
+`VERSIONS` take precedence over `get_windows_dll_file_version()`. DLLs without a
+numeric FileVersion receive a stable assembly identity derived from their SHA-256
+bytes; this identity is not a software release version.
+
+`get_windows_dll_file_version(path result OPTIONAL)` returns an empty result when
+no numeric FileVersion is present. Without `OPTIONAL`, that remains an error.
+
 ### Unit Test Generation
 ```cmake
 set(TEST_LIBRARIES ${COMMON_LIBRARIES})

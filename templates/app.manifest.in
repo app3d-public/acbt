@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"
           xmlns:asmv3="urn:schemas-microsoft-com:asm.v3">
-  <assemblyIdentity name="@PROJECT_NAME@" processorArchitecture="*"
-                    version="@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.0"
+  <assemblyIdentity name="@PACKAGE_NAME@" processorArchitecture="@MANIFEST_PROCESSOR_ARCHITECTURE@"
+                    version="@PACKAGE_VERSION@"
                     type="win32" />
   <description>@PROJECT_DESCRIPTION@</description>
   
